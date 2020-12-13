@@ -15,6 +15,7 @@ description: ''
 
 ![Something I drew over quarantine.](/post/2020-12-11-coding-skills_files/Orange_Girl.png){width=50%}
 
+
 This is a ggplot in r that is animated to show how GDP per capita vs life expectancy changes from the years 1954-2007.
 ```{r}
 library(ggplot2)

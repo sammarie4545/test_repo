@@ -229,7 +229,7 @@ for (i in 1:5000) {
 }</code></pre>
 <p><img src="/project/project2_files/figure-html/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
 <pre class="r"><code>mean(rand_dist &gt; 0.0595 | rand_dist &lt; -0.0595)</code></pre>
-<pre><code>## [1] 0.9802</code></pre>
+<pre><code>## [1] 0.9778</code></pre>
 <p><em>The null hypothesis is that there are no differences (mean difference is equal to 0) between the mean length of bird between solid/plain colored eggs and speckled/spotted colored eggs. The alternative hypothesis is that there is a difference (mean difference does not equal 0) between the mean length of bird between solid/plain colored eggs and speckled/spotted colored eggs. The mean difference was found to be 0.0595 which indicates that we fail to reject the null hypothesis that there are no differences in mean length between egg colors. The p-value was found to be .9794 which indicates that the results that were found are not significant and are very likely due to chance.</em></p>
 </div>
 <div id="linear-regression" class="section level5">
@@ -314,7 +314,7 @@ samp_distn &lt;- replicate(5000, {
 
 samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% summarize_all(sd)</code></pre>
 <pre><code>##   (Intercept)    Color  Incubate Color:Incubate
-## 1    11.84459 12.76795 0.8864486      0.9597212</code></pre>
+## 1    11.78208 12.63939 0.8776572      0.9460583</code></pre>
 <p><em>For the intercept, 17.608 is the mean/predicted length for solid/plain colored eggs with a mean incubation time of 13.35. For birds with an average incubation time, speckled/spotted eggs have a predicted length that is 0.0227 greater (t=.017, p=.9867). For every one unit increase in incubation time, predicted length goes up by 0.015 for speckled/spotted eggs (t=.016, p=.9872). The slope for length on incubate is 1.736 greater for speckled or spotted eggs than for solid colored eggs (t=1.77, p=.0806). The assumptions of homoskedasticity, linearity, and normality all appear to be met. There are no significant results after running the linear regression model.This model explains .2271 proportion of the variation of the outcome (adjusted R-squared). After performing the robust standard errors, compared to the original SEs, the SEs decreased by a small amount for each value while the p-values remained about the same for color and incubate_c but slightly decreased for the interaction. None of the results are significant, although the interaction is very close to being significant. After performing the bootstrapped SEs, the SE for color and the intercept is much higher than the original SE, while the incubate and color:incubate SEs are about the same as the original SEs.</em></p>
 </div>
 <div id="fitted-logistic-regression" class="section level5">
@@ -849,7 +849,7 @@ summarize_all(diags, mean)</code></pre>
 ## [65] vctrs_0.3.2       foreach_1.5.0     cellranger_1.1.0  gtable_0.3.0     
 ## [69] assertthat_0.2.1  xfun_0.16         openxlsx_4.1.5    broom_0.7.0      
 ## [73] survival_3.2-7    iterators_1.0.12  ellipsis_0.3.1</code></pre>
-<pre><code>## [1] &quot;2020-12-11 09:49:21 CST&quot;</code></pre>
+<pre><code>## [1] &quot;2020-12-13 12:32:19 CST&quot;</code></pre>
 <pre><code>##                                       sysname 
 ##                                       &quot;Linux&quot; 
 ##                                       release 
