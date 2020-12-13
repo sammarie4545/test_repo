@@ -1,0 +1,65 @@
+---
+title: Coding Skills
+author: ''
+date: '2020-12-11'
+slug: coding-skills
+categories: []
+tags: []
+description: ''
+---
+
+
+
+<p><a href="/project/project1/">Link to Project 1</a></p>
+<p><a href="https://www.google.com">Link to google</a></p>
+<div class="figure">
+<img src="/post/2020-12-11-coding-skills_files/Orange_Girl.png" style="width:50.0%" />
+
+</div>
+<p>This is a ggplot in r that is animated to show how GDP per capita vs life expectancy changes from the years 1954-2007.</p>
+<pre class="r"><code>library(ggplot2)
+library(gapminder)
+library(gganimate)
+library(gifski)
+library(reticulate)
+## standard ggplot2
+myPlot &lt;- ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
+  geom_point(alpha = 0.7, show.legend = FALSE) +
+  scale_colour_manual(values = country_colors) +
+  scale_size(range = c(2, 12)) +
+  scale_x_log10() +
+  # Here comes the gganimate specific bits
+  labs(title = &#39;Year: {frame_time}&#39;, x = &#39;GDP per capita&#39;, y = &#39;life expectancy&#39;) +
+  transition_time(year) +
+  ease_aes(&#39;linear&#39;)
+
+animate(myPlot, duration = 5, fps = 20, width = 200, height = 200, renderer = gifski_renderer())</code></pre>
+<p><img src="/post/2020-12-11-coding-skills_files/figure-html/unnamed-chunk-1-1.gif" /><!-- --></p>
+<pre class="r"><code>anim_save(&quot;output.gif&quot;)</code></pre>
+<p>This is a python code chunk that is then used to communicate with r using reticulate.</p>
+<pre class="python"><code>import re
+x=[1,2,3]
+print(x[0])</code></pre>
+<pre><code>## 1</code></pre>
+<pre class="python"><code>y=&quot;bananas, apples, strawberries, blueberries, raspberries, pineapples, cherries&quot;
+re.findall(r&quot;.....berries&quot;,y)</code></pre>
+<pre><code>## [&#39;strawberries&#39;, &#39; blueberries&#39;, &#39; raspberries&#39;]</code></pre>
+<pre class="python"><code>mee = {
+  &#39;firstName&#39;: &#39;Sam&#39;, 
+  &#39;lastName&#39;: &#39;Snyder&#39;, 
+  &#39;hobbies&#39;: [&#39;baking&#39;,&#39;reading&#39;,&#39;yoga&#39;], 
+  &#39;occupation&#39;: [&#39;student&#39;, &#39;future head of the CDC&#39;], 
+  &#39;age&#39;: 21
+}
+mee</code></pre>
+<pre><code>## {&#39;firstName&#39;: &#39;Sam&#39;, &#39;lastName&#39;: &#39;Snyder&#39;, &#39;hobbies&#39;: [&#39;baking&#39;, &#39;reading&#39;, &#39;yoga&#39;], &#39;occupation&#39;: [&#39;student&#39;, &#39;future head of the CDC&#39;], &#39;age&#39;: 21}</code></pre>
+<pre class="python"><code>mee.values()</code></pre>
+<pre><code>## dict_values([&#39;Sam&#39;, &#39;Snyder&#39;, [&#39;baking&#39;, &#39;reading&#39;, &#39;yoga&#39;], [&#39;student&#39;, &#39;future head of the CDC&#39;], 21])</code></pre>
+<pre class="python"><code>who=&quot;Taylor, Swift, is, a, Queen, we, don&#39;t, deserve, her&quot;</code></pre>
+<p>Here is the r code communicating with the python code.</p>
+<pre class="r"><code>py$x</code></pre>
+<pre><code>## [1] 1 2 3</code></pre>
+<pre class="r"><code>py$y</code></pre>
+<pre><code>## [1] &quot;bananas, apples, strawberries, blueberries, raspberries, pineapples, cherries&quot;</code></pre>
+<pre class="r"><code>py$who</code></pre>
+<pre><code>## [1] &quot;Taylor, Swift, is, a, Queen, we, don&#39;t, deserve, her&quot;</code></pre>

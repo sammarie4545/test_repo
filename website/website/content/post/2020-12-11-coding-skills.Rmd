@@ -1,0 +1,69 @@
+---
+title: Coding Skills
+author: ''
+date: '2020-12-11'
+slug: coding-skills
+categories: []
+tags: []
+description: ''
+---
+
+[Link to Project 1](/project/project1/)
+
+[Link to google](https://www.google.com)
+
+
+![Something I drew over quarantine.](/post/2020-12-11-coding-skills_files/Orange_Girl.png){width=50%}
+
+This is a ggplot in r that is animated to show how GDP per capita vs life expectancy changes from the years 1954-2007.
+```{r}
+library(ggplot2)
+library(gapminder)
+library(gganimate)
+library(gifski)
+library(reticulate)
+## standard ggplot2
+myPlot <- ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
+  geom_point(alpha = 0.7, show.legend = FALSE) +
+  scale_colour_manual(values = country_colors) +
+  scale_size(range = c(2, 12)) +
+  scale_x_log10() +
+  # Here comes the gganimate specific bits
+  labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'life expectancy') +
+  transition_time(year) +
+  ease_aes('linear')
+
+animate(myPlot, duration = 5, fps = 20, width = 200, height = 200, renderer = gifski_renderer())
+anim_save("output.gif")
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+This is a python code chunk that is then used to communicate with r using reticulate.
+```{python}
+import re
+x=[1,2,3]
+print(x[0])
+y="bananas, apples, strawberries, blueberries, raspberries, pineapples, cherries"
+re.findall(r".....berries",y)
+mee = {
+  'firstName': 'Sam', 
+  'lastName': 'Snyder', 
+  'hobbies': ['baking','reading','yoga'], 
+  'occupation': ['student', 'future head of the CDC'], 
+  'age': 21
+}
+mee
+mee.values()
+who="Taylor, Swift, is, a, Queen, we, don't, deserve, her"
+```
+
+Here is the r code communicating with the python code.
+```{R}
+py$x
+py$y
+py$who
+
+```

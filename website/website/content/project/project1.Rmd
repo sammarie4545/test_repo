@@ -1,0 +1,116 @@
+---
+title: Project 1
+hidedate: true
+output:
+  html_document: default
+  pdf_document: default
+---
+  ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+                      tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+##Samantha Snyder sms7265  
+
+
+#####Introduction
+*I chose the datasets VA and lung. VA is a veteran's administration lung cancer trial and lung is a NCCTG lung cancer dataset. The VA dataset contains survival time/stime (days), status (0=dead, 1=censored), treatment/treat (1=standard, 2=test), age (years), Karnofsky score/Karn (0-100), diagnosis time/diag.time (months), cell type/cell (4), and prior therapy/prior. The lung dataset contains institution code/inst, survival time/time (days), status (1=censored, 2=dead), age (years), sex (1=male, 2=female), physician ECOG performance score/ph.ecog, physician scored Karnofsky score of patient/ph.karno (0-100), patient scored Karnofsky score/pat.karno (0-100), calories per meal/meal.cal (kCalories), weight lost in last 6 months/wt.loss (pounds). The / used in the sentence above is to show the variable name in the dataset. For the lung dataset, the variables were found by studying patients with advanced lung cancer in the North Central Cancer Treatment Group. The VA dataset acquired the variables from the Veteran's Administration lung cancer trial from Kalbfleisch & Prentice. These datasets and variables were interesting to me because my grandfather passed away due to complications from lung cancer 2 years ago. Additionally, I am very interested in human disease (primarily infectious diseases but I find cancer fascinating) and thought that this could be an interesting way to learn more about lung cancer. I do not really expect to find many associations because cancer presents so differently in every individual and is widely variable. I would maybe expect to see a correlation between weight loss and calories per meal. *
+
+#####Joining
+```{R}
+library(MASS)
+data("VA")
+library(tidyverse)
+library(survival)
+data("lung")
+
+lungjoin<-VA%>%full_join(lung, by=c("stime"="time", "Karn"="ph.karno"))
+lungjoin<-lungjoin%>%rename(age=age.x, status=status.x, wtloss=wt.loss, mealcal=meal.cal)
+lungjoin$age.y<-lungjoin$status.y<-lungjoin$ph.ecog <-lungjoin$pat.karno <- lungjoin$diag.time<-lungjoin$inst<- NULL
+
+``` 
+
+*My dataset was already tidy because each variable had its own column. I joined my datasets using a full join because I wanted to retain all of the data from both datasets while also joining them based on one common variable (time) and be able to remove any variables I didn't want after I had already joined the two. The VA dataset contained 137 observations of 8 variables and the lung dataset contained 228 observations of 10 variables. I dropped a few variables. I dropped pat.karno, diag.time, and inst because there were too many NAs and not enough data for these variables to be worth it and they were also strange data that I didn't really have a use for. I removed the pat.karno but kept Karn and ph.karno because Karn and ph.karno are both a score of the patient on the Karnofsky scale done by the physician while pat.karno is done by the patient. I removed age and status from one of the datasets because if I had left them, I would not have been left with any complete rows. It made my data easier to understand as well as easier to manipulate. Additionally, status used a different convention in the lung dataset than VA so it was easier to just remove it.*
+
+#####Wrangling
+```{R}
+lungjoin%>%filter(stime<200)%>%arrange(age)
+lungjoin%>%select(treat, stime, mealcal, sex)%>%group_by(sex)%>%summarize_if(is.numeric,mean,na.rm=T)
+wtlossperday<-lungjoin%>%mutate(wtperday=wtloss/stime)
+lungcat<-lungjoin%>%mutate(catvar=case_when(status>0~"censored",
+                                   status<1~"dead"))
+lungcat%>%group_by(catvar)%>%select(-treat,-cell,-prior)%>%summarize_all(funs(n_distinct,sd,mean,min,max),na.rm=T)%>%pivot_longer(-1)%>%
+  separate(name,into=c("var","stat"))%>%
+  pivot_wider(names_from="var",values_from="value")
+
+
+lungjoin%>%select(-treat,-cell,-prior)%>%summarize_all(funs(n_distinct,mean,min,max,sd),na.rm=T)%>%pivot_longer(-1)%>%
+  separate(name,into=c("var","stat"))%>%
+  pivot_wider(names_from="var",values_from="value")
+
+
+lungj<-lungjoin%>%select(stime,sex,mealcal,wtloss,status,Karn)
+lungmat<-lungj%>%select_if(is.numeric)%>%cor(use="pair")
+lungcor<-lungmat%>%as.data.frame%>%rownames_to_column("var1")%>%
+  pivot_longer(-1,"var2",values_to="correlation")
+
+
+```
+
+*My datasets were already tidy so I did not need to use pivot_longer or pivot_wider until my summary statistics. I then used these two functions when analyzing my summary statistics in order to visualize the results more clearly. I used pivot longer to remove the first column of my table because it did not provide any useful information and I used pivot wider to create more columns that separate the variable and the statistic so that it is easier to compare each statistic. For my statistics, I compared the mean time and calories per meal that each sex had (males had a lower average time but a higher average calorie per meal), filtered by observations of less than 200 days for the time and arranged it by age (there was a large variance between age and time), and I also created a new variable called weight loss per day that divided the weight lost by the time so that a new column was created indicating the amount of weight lost per day for each observation. In order to use the group by function for my summary statistics, I created a new categorical variable called catvar that changed status into a category where 1 means censored and 0 means dead. I then used this categorical variable to group by for my summary statistics in which I selected everything except treatment, cell type, and prior (because these were not numeric and would not work for my statistics). The selected variables were then summarized using the mean, standard deviation, minimum, maximum, and number of distinct values functions and formatted using pivot wider and longer in order to make a table that was easy to read and compare. I then repeated these summary statistics using the same method but without using the group by function. The summary statistics were very useful in providing a concise way of looking at the data and determining any patterns or trends (for example: large standard deviation in calories per meal, more women than men in the dataset, and largest survival time is 1022 days. Lastly, I created a correlation matrix to be used later in the project by first selecting some of my numeric variables (ones that allow me to have an ample amount of complete rows) and using the cor function with use="pair" in order to create a correlation matrix that drops any NAs. I then created a data frame that created columns for variable 1, variable 2, and correlation using pivot longer and rownames_to_column.*
+
+
+#####Visualizing
+```{R}
+nalung<-lungjoin%>%na.omit
+library(ggthemes)
+ggplot(lungjoin, aes(age, stime, color=treat))+ theme_calc()+geom_point()+ 
+  labs(x = "Age (years)", y = "Survival Time (days)", 
+       title = "Age of Patient vs Survival Time")+
+  scale_colour_brewer(type = "seq", palette = "Pastel1")
+```
+
+*First, I created a dataset that removed any NAs. For my first graph, I created a scatter plot using geom_point. This graph looks at the age of the patient vs their survival time and I colored the points by treatment type (1=standard, 2=test). There are a couple of outliers in the 50-60 range that have survival times close to or over 1000 days and both received the test treatment. There doesn't appear to be a clear trend in the graph although there are definitely more cases present in patients over 60 years old. Of those that are over 60 years old, there is a great amount that have a survival time below 250 days. Although there are more in the 60-70 age range that have survival times between 250 and 500 days, the proportion appears to be smaller compared to those under 60 years old due to the majority having a low survival time. Overall, the survival time for all ages is clustered below 250 days, and anyone over 70 years old does not have a survival time greater than 125 days. Those who had the standard treatment and were younger than 50 years old appear to have a better survival time while those older than 50 seem to experience longer survival times with both the standard and test treatments.*
+
+```{R}
+ggplot(lungjoin, aes(x = age, y = Karn, fill=cell))+
+  geom_bar(stat="summary", fun=mean, position = position_dodge(width = 4, preserve = "single"))+
+  geom_errorbar(stat="summary", fun.data=mean_se, position = position_dodge(width = 4, preserve = "single"))+
+  labs(x = "Age (years)", y = "Karnosfky Score (0-100)", 
+       title = "Age vs Karnofsky Score of Patient")+
+  scale_y_continuous(breaks=seq(0, 100, by = 5))+
+  scale_x_continuous(breaks=seq(30, 81, by = 2))+
+  theme_minimal()
+```
+*For my second graph, I made a bar chart that compares age and Karnofsky score of the patient's performance given by the physician. I colored the bars by the type of cell present in the cancer. A higher Karnofsky score indicates a better performance and well-being. The graph shows that a patient that is 55 years old has the highest Karnofsky score while an individual aged 57 had the second lowest. I find this interesting because they both had the same cell type and are only 2 years of age different, but there is close to a 60 point difference in their Karnofsky score. There appears to be a high number of cell type for in individuals between the ages of 60 and 70 and they all have about an average Karofsky score. The majority of patients across all ages and cell types tend to have a Karnofsky score close to 80. After the age of 62, it appears that the Karnofsky score begins declining slightly. There isn't a clear trend among any of the variables but this graph is very useful in analyzing and comparing these factors.*
+
+```{R}
+lungj<-lungjoin%>%select(stime,sex,mealcal,wtloss,status,Karn)
+lungmat<-lungj%>%select_if(is.numeric)%>%cor(use="pair")
+lungcor<-lungmat%>%as.data.frame%>%rownames_to_column("var1")%>%
+  pivot_longer(-1,"var2",values_to="correlation")
+lungcor%>%ggplot(aes(var1,var2,fill=correlation))+geom_tile()+scale_fill_gradient2(low="blue",mid="pink",high="purple")+ 
+  geom_text(aes(label=round(correlation,2)),color = "black", size = 4)+ 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))+ 
+  coord_fixed() +
+  labs(x = "Variable 1", y= "Variable 2", title = "Heatmap")
+```
+
+*Lastly, for my third graph, I made a heatmap using the correlation matrix I previously made. This heatmap shows that there isn't strong correlation among any of the variables, with the strongest correlation being between survival time and Karnofsky score with a correlation of .41. This makes sense because cancer is highly variable and diverse among individuals. Other than time and Karn score, all of the other variables have a correlation less than .2 which indicates that they are very weakly correlated. The correlation of 1 is shown at a diagonal because these are the variables that were crossed with themselves, so it has a correlation of 1 because they are the same variable. The gray squares are where there were NAs for the two variables so correlation wasn't able to be calculated.*
+
+
+#####Dimensionality Reduction
+```{R}
+str(lungjoin)
+library(cluster)
+numlung<-lungjoin%>%select(stime,Karn,age,mealcal,wtloss,status)
+lungpam<-numlung%>%pam(k=2)
+lungclust<-numlung%>%mutate(cluster=as.factor(lungpam$clustering))
+lungclust%>%ggplot(aes(stime,Karn,wtloss,age,mealcal,status,color=cluster))+geom_point()
+lungpam$silinfo$avg.width
+plot(lungpam,which=2)
+
+
+```
+
+*I performed PAM clustering on 6 of my numeric variables. First, I created a dataset with the numeric variables that I wanted to use (survival time, Karnofsky score, age, calories per meal, weight loss, and status) and then created a dataset with these variables that used pam clustering to create 2 clusters (k=2). PAM clustering works by selecting k number of clusters of n datapoints at random in order to create medoids. Each of the n-k observations is then assigned to a cluster and the goal is to minimize the sum of the distances to the center of the clusters. Next, I saved the cluster solution as a dataset and plotted that dataset in order to visualize the clusters. Lastly, I computed and visualized the sihouette width. I chose 2 clusters because I knew that none of my data was going to be very closely correlated or clustered so having the smallest amount of clusters would allow me to have slightly more separated clusters. I confirmed this by checking the silhouette width for the different amounts of clusters and found that 2 had the highest width. At a width of only .52, this structure is reasonable but still quite weak. By looking at the plot of my data it appears that the clusters were created mostly by separating by survival time, with survival times greater than 275 being in cluster 2 and survival times lower than 275 being in cluster 1. I feel like these clusters were probably artificially created by simply separating the most closely correlated variables (survival time and Karnofsky score) into two groups, although I did end up with a reasonable silhouette length. I also tested using different numeric variables (using only Karn, stime, and wtloss because they were the most closely related) and got a silhouette length of .58 with 2 clusters, which was slightly better, but I decided against using this because I preferred using more of my numeric variables.*
+

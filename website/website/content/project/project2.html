@@ -1,0 +1,870 @@
+---
+title: Project 2
+hidedate: true
+output:
+  html_document: default
+  pdf_document: default
+---
+
+
+
+<div id="samantha-snyder-sms7265" class="section level2">
+<h2>Samantha Snyder sms7265</h2>
+<div id="introduction" class="section level5">
+<h5>Introduction</h5>
+<p><em>My dataset is called BirdNest and contains variables that measure species and nest characteristics for North American passerines (perching birds). There are 84 observations including 12 variables. Species denotes the Latin species name, Common is the common species name, Length is the mean body length for each species in cm, Nesttype is the type of nest (various factors), Location is the location of the nest by region, No.eggs is the mean number of eggs, Color is color of the eggs (0=solid, 1=speckled/spotted), Incubate is the mean time in days that the species incubates eggs in the nest, Nestling is the mean time in days that the species cares for the babies in the nest until they are able to fly, Totcare is the total time taken to care for the babies (Incubate+Nestling), and Closed. is whether the nest is open or closed. This dataset was very interesting to me and I feel like I have learned a great deal about bird nests which is fun!</em></p>
+</div>
+<div id="manova" class="section level5">
+<h5>Manova</h5>
+<pre class="r"><code>library(Stat2Data)
+library(tidyverse)
+data(BirdNest)
+BirdNest &lt;- BirdNest %&gt;% na.omit() %&gt;% select(-Page)
+head(BirdNest)</code></pre>
+<pre><code>##                     Species                     Common Length Nesttype Location
+## 1         Tyrannus tyrannus           Eastern Kingbird   20.0      cup    decid
+## 2 Myiodynastes luteiventris Sulphur-bellied Flycatcher   20.0   cavity    decid
+## 3     Myiarchus cinerascens     Ash-thoated Flycatcher   20.0   cavity    decid
+## 4      Myiarchus tyrannulus   Brown-crested Flycatcher   22.5   cavity    decid
+## 5     Myarchus tuberculifer    Dusky-capped Flycatcher   17.0   cavity    decid
+## 6           Sayornis phoebe             Eastern Phoebe   17.0      cup   bridge
+##   No.eggs Color Incubate Nestling Totcare Closed.
+## 1     3.5     1     17.0     17.0    34.0       0
+## 2     3.5     1     15.5     17.0    32.5       1
+## 3     4.5     1     15.0     15.0    30.0       1
+## 4     4.5     1     14.0     16.5    30.5       1
+## 5     4.5     1     14.0     14.0    28.0       1
+## 6     4.5     0     16.0     15.5    31.5       0</code></pre>
+<pre class="r"><code>str(BirdNest)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    83 obs. of  11 variables:
+##  $ Species : Factor w/ 84 levels &quot;Agelaius phoeniceus&quot;,..: 81 45 42 43 41 65 24 61 2 25 ...
+##  $ Common  : Factor w/ 84 levels &quot;American Dipper&quot;,..: 29 71 5 16 27 30 35 76 31 37 ...
+##  $ Length  : num  20 20 20 22.5 17 17 15 15 18.5 19 ...
+##  $ Nesttype: Factor w/ 7 levels &quot;burrow&quot;,&quot;cavity&quot;,..: 4 2 2 2 2 4 4 4 6 6 ...
+##  $ Location: Factor w/ 9 levels &quot;bank&quot;,&quot;bridge&quot;,..: 6 6 6 6 6 2 8 6 7 7 ...
+##  $ No.eggs : num  3.5 3.5 4.5 4.5 4.5 4.5 3.5 3 3.5 3.5 ...
+##  $ Color   : int  1 1 1 1 1 0 0 1 1 1 ...
+##  $ Incubate: num  17 15.5 15 14 14 16 14 14.5 11.5 11.5 ...
+##  $ Nestling: num  17 17 15 16.5 14 15.5 16 15 9.5 10.5 ...
+##  $ Totcare : num  34 32.5 30 30.5 28 31.5 30 29.5 21 22 ...
+##  $ Closed. : int  0 1 1 1 1 0 0 0 0 0 ...</code></pre>
+<pre class="r"><code>BirdNest$Species &lt;- as.character(BirdNest$Species)
+BirdNest$Common &lt;- as.character(BirdNest$Common)
+library(rstatix)
+BirdNest$Nesttype &lt;- as.character(BirdNest$Nesttype)
+group &lt;- BirdNest$Common
+DVs &lt;- BirdNest %&gt;% select(Length, No.eggs, Incubate, Nestling)
+
+# Test multivariate normality for each group (null:
+# assumption met)
+sapply(split(DVs, group), mshapiro_test)</code></pre>
+<pre><code>##           American Dipper American Goldfinch American Robin
+## statistic 0.894997        0.8714871          0.9768494     
+##           American Tree Sparrow Ash-thoated Flycatcher Bank Swallow
+## statistic 0.9418778             0.8887151              0.9853585   
+##           Barn Swallow Bewick&#39;s Wren Black-capped Chickadee
+## statistic 0.9022426    0.737299      0.9605782             
+##           Black-tailed Gnatcatcher Black-throated Green Warbler
+## statistic 0.8730789                0.8480787                   
+##           Blackpoll Warbler Blue Jay  Blue-winged Warbler Bobolink 
+## statistic 0.7757926         0.9722663 0.9418736           0.9613099
+##           Brown Thrasher Brown-crested Flycatcher Cactus Wren
+## statistic 0.8949639      0.972112                 0.8296044  
+##           California Thrasher Carolina Wren Cedar Waxwing
+## statistic 0.9291742           0.7252874     0.9202027    
+##           Chestnut-collared Longspur Clark&#39;s Nutcracker Cray Jay 
+## statistic 0.8860806                  0.9752954          0.9708492
+##           Curve-billed Thrasher Dark-eyed Junco Dusky-capped Flycatcher
+## statistic 0.9592105             0.9329421       0.8321568              
+##           Eastern Bluebird Eastern Kingbird Eastern Phoebe Eurasion Skylark
+## statistic 0.8574187        0.7855972        0.7286953      0.9868797       
+##           European Starling Golden-crowned Kinglet Gray Catbird Gray Flycatcher
+## statistic 0.8784463         0.8624087              0.9614514    0.7578752      
+##           Hermit Thrush Horned Lark House Finch House Sparrow House Wren
+## statistic 0.9447972     0.9698544   0.7893611   0.8657062     0.9233382 
+##           Lark Bunting Lark Sparrow Lincoln&#39;s Sparrow Loggerhead Shrike
+## statistic 0.9835754    0.9878503    0.8849718         0.918857         
+##           Mountain Bluebird Northern Cardinal Northern Mockingbird
+## statistic 0.9801334         0.9856555         0.9504567           
+##           Northern Rough-winged Swallow Northern Shrike Painted Redstart
+## statistic 0.9820507                     0.9474764       0.8262297       
+##           Phainopepla Pine Grosbeak Pine Siskin Pinyon Jay Prothonotary Warbler
+## statistic 0.8483282   0.9631091     0.8149466   0.958568   0.8714871           
+##           Purple Finch Pygmy Nuthatch Red-breasted Nuthatch Red-eyed Vireo
+## statistic 0.7450711    0.9680121      0.976374              0.9145179     
+##           Red-winged Blackbird Rose-breasted Grosbeak Rosy Finch
+## statistic 0.9755057            0.9973599              0.9101392 
+##           Ruby-crowned Kinglet Sage Thrush Scarlet Tanager Scrub Jay
+## statistic 0.8633691            0.984594    0.9945706       0.9799032
+##           Snow Bunting Solitary Vireo Song Sparrow Sulphur-bellied Flycatcher
+## statistic 0.9080071    0.6297763      0.8935917    0.8527834                 
+##           Swainson&#39;s Thrush Swamp Sparrow Tufted Titmouse Verdin   
+## statistic 0.9616856         0.743573      0.8663719       0.9156883
+##           Vermillion Flycatcher Vesper Sparrow Water Pipit White Wagtail
+## statistic 0.6597225             0.9780477      0.8073096   0.9387513    
+##           White-breasted Nuthatch Wood Thrush Worm-eating Warbler
+## statistic 0.7989086               0.9715254   0.8718252          
+##           Yellow Wagtail Yellow-breasted Chat
+## statistic 0.8787967      0.9848449           
+##  [ reached getOption(&quot;max.print&quot;) -- omitted 1 row ]</code></pre>
+<pre class="r"><code>man1 &lt;- manova(cbind(Length, No.eggs, Incubate, Nestling) ~ Nesttype, 
+    data = BirdNest)
+
+summary(man1)</code></pre>
+<pre><code>##           Df  Pillai approx F num Df den Df    Pr(&gt;F)    
+## Nesttype   6 0.74184    2.884     24    304 1.411e-05 ***
+## Residuals 76                                             
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>summary.aov(man1)</code></pre>
+<pre><code>##  Response Length :
+##             Df  Sum Sq Mean Sq F value  Pr(&gt;F)  
+## Nesttype     6  345.85  57.642  2.2586 0.04648 *
+## Residuals   76 1939.61  25.521                  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response No.eggs :
+##             Df  Sum Sq Mean Sq F value    Pr(&gt;F)    
+## Nesttype     6  51.389  8.5649  5.4539 9.803e-05 ***
+## Residuals   76 119.352  1.5704                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+##  Response Incubate :
+##             Df Sum Sq Mean Sq F value Pr(&gt;F)
+## Nesttype     6   4.72  0.7866  0.2831 0.9433
+## Residuals   76 211.15  2.7783               
+## 
+##  Response Nestling :
+##             Df Sum Sq Mean Sq F value    Pr(&gt;F)    
+## Nesttype     6 320.69  53.448  4.8388 0.0003118 ***
+## Residuals   76 839.47  11.046                      
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>pairwise.t.test(BirdNest$Incubate, BirdNest$Nesttype, p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  BirdNest$Incubate and BirdNest$Nesttype 
+## 
+##           burrow cavity crevice cup  pendant saucer
+## cavity    0.89   -      -       -    -       -     
+## crevice   0.91   0.74   -       -    -       -     
+## cup       0.95   0.83   0.81    -    -       -     
+## pendant   0.88   0.95   0.78    0.88 -       -     
+## saucer    0.44   0.31   0.31    0.23 0.55    -     
+## spherical 0.77   0.80   0.66    0.72 0.88    0.67  
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(BirdNest$No.eggs, BirdNest$Nesttype, p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  BirdNest$No.eggs and BirdNest$Nesttype 
+## 
+##           burrow cavity crevice cup     pendant saucer
+## cavity    0.6615 -      -       -       -       -     
+## crevice   0.8846 0.7557 -       -       -       -     
+## cup       0.3884 0.0010 0.2055  -       -       -     
+## pendant   0.0114 0.0033 0.0087  2.7e-05 -       -     
+## saucer    0.2090 0.0123 0.1114  0.3652  5.8e-05 -     
+## spherical 0.4274 0.1360 0.3110  0.8107  0.0011  0.7306
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(BirdNest$Length, BirdNest$Nesttype, p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  BirdNest$Length and BirdNest$Nesttype 
+## 
+##           burrow cavity crevice cup   pendant saucer
+## cavity    0.490  -      -       -     -       -     
+## crevice   0.266  0.423  -       -     -       -     
+## cup       0.108  0.022  0.804   -     -       -     
+## pendant   0.491  0.109  0.064   0.012 -       -     
+## saucer    0.379  0.656  0.739   0.439 0.096   -     
+## spherical 0.657  0.923  0.529   0.317 0.259   0.711 
+## 
+## P value adjustment method: none</code></pre>
+<pre class="r"><code>pairwise.t.test(BirdNest$Nestling, BirdNest$Nesttype, p.adj = &quot;none&quot;)</code></pre>
+<pre><code>## 
+##  Pairwise comparisons using t tests with pooled SD 
+## 
+## data:  BirdNest$Nestling and BirdNest$Nesttype 
+## 
+##           burrow  cavity  crevice cup     pendant saucer 
+## cavity    0.08798 -       -       -       -       -      
+## crevice   0.19132 0.88799 -       -       -       -      
+## cup       0.00430 0.00396 0.12652 -       -       -      
+## pendant   0.06387 0.43359 0.46061 0.74006 -       -      
+## saucer    0.00168 0.00742 0.03749 0.18077 0.28103 -      
+## spherical 0.88081 0.05738 0.14215 0.00232 0.04575 0.00098
+## 
+## P value adjustment method: none</code></pre>
+<p><em>84 pairwise t tests were performed that compared the different types of nests with the other levels no.eggs, nestling, length, and incubate. The probability that we have made a type I error is 0.987 which was found by calculating 1-.95^84. The boneferroni adjusted significance level is .000595 and the post hoc tests that were significant that are no longer significant are spherical and saucer. MANOVA assumptions of Random samples and independent observations are likely met, multivariate normality of DVs is likely not met, homogeneity of within-group covariance matrices is likely met, linear relationships among DVs is likely not met, no extreme univariate or multivariate outliers is likely met, and no multicollinearity is likely met.</em></p>
+</div>
+<div id="randomization-test" class="section level5">
+<h5>Randomization Test</h5>
+<pre class="r"><code>ggplot(BirdNest, aes(Length, fill = Color)) + geom_histogram(bins = 6.5) + 
+    facet_wrap(~Color, ncol = 2) + theme(legend.position = &quot;none&quot;)</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>BirdNest %&gt;% group_by(Color) %&gt;% summarize(means = mean(Length)) %&gt;% 
+    summarize(mean_diff = diff(means))</code></pre>
+<pre><code>## # A tibble: 1 x 1
+##   mean_diff
+##       &lt;dbl&gt;
+## 1    0.0595</code></pre>
+<pre class="r"><code>rand_dist &lt;- vector()
+
+for (i in 1:5000) {
+    new &lt;- data.frame(Color = sample(BirdNest$Color), Length = BirdNest$Length)
+    rand_dist[i] &lt;- mean(new[new$Color == 1, ]$Length) - mean(new[new$Color == 
+        0, ]$Length)
+}
+
+{
+    hist(rand_dist, main = &quot;&quot;, ylab = &quot;&quot;)
+    abline(v = c(-0.0595, 0.0595), col = &quot;red&quot;)
+}</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-2-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>mean(rand_dist &gt; 0.0595 | rand_dist &lt; -0.0595)</code></pre>
+<pre><code>## [1] 0.9802</code></pre>
+<p><em>The null hypothesis is that there are no differences (mean difference is equal to 0) between the mean length of bird between solid/plain colored eggs and speckled/spotted colored eggs. The alternative hypothesis is that there is a difference (mean difference does not equal 0) between the mean length of bird between solid/plain colored eggs and speckled/spotted colored eggs. The mean difference was found to be 0.0595 which indicates that we fail to reject the null hypothesis that there are no differences in mean length between egg colors. The p-value was found to be .9794 which indicates that the results that were found are not significant and are very likely due to chance.</em></p>
+</div>
+<div id="linear-regression" class="section level5">
+<h5>Linear Regression</h5>
+<pre class="r"><code>library(sandwich)
+library(lmtest)
+BirdNest$Incubate_c &lt;- BirdNest$Incubate - mean(BirdNest$Incubate)
+mean(BirdNest$Incubate)</code></pre>
+<pre><code>## [1] 13.3494</code></pre>
+<pre class="r"><code>fit1 &lt;- lm(Length ~ Color * Incubate_c, data = BirdNest)
+summary(fit1)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = Length ~ Color * Incubate_c, data = BirdNest)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -11.3969  -3.1441  -0.5215   2.6672  12.8559 
+## 
+## Coefficients:
+##                  Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)      17.60861    1.24386  14.156   &lt;2e-16 ***
+## Color             0.02274    1.36362   0.017   0.9867    
+## Incubate_c        0.01478    0.92141   0.016   0.9872    
+## Color:Incubate_c  1.73616    0.98091   1.770   0.0806 .  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 4.641 on 79 degrees of freedom
+## Multiple R-squared:  0.2553, Adjusted R-squared:  0.2271 
+## F-statistic: 9.029 on 3 and 79 DF,  p-value: 3.28e-05</code></pre>
+<pre class="r"><code>BirdNest %&gt;% ggplot(aes(Length, Incubate, color = Color)) + geom_point() + 
+    geom_smooth(method = &quot;lm&quot;, se = FALSE, fullrange = TRUE)</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>bptest(fit1)</code></pre>
+<pre><code>## 
+##  studentized Breusch-Pagan test
+## 
+## data:  fit1
+## BP = 3.6951, df = 3, p-value = 0.2963</code></pre>
+<pre class="r"><code>resids &lt;- lm(Length ~ Color * Incubate, data = BirdNest)$residuals
+fitted &lt;- lm(Length ~ Color * Incubate, data = BirdNest)$fitted.value
+ggplot() + geom_histogram(aes(resids, bin = 10))</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-3-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot() + geom_point(aes(fitted, resids))</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-3-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>resids &lt;- fit1$residuals
+fitvals &lt;- fit1$fitted.values
+ggplot() + geom_point(aes(fitvals, resids)) + geom_hline(yintercept = 0, 
+    color = &quot;red&quot;)</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-3-4.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot() + geom_histogram(aes(resids), bins = 20)</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-3-5.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>ggplot() + geom_qq(aes(sample = resids)) + geom_qq()</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-3-6.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>shapiro.test(resids)</code></pre>
+<pre><code>## 
+##  Shapiro-Wilk normality test
+## 
+## data:  resids
+## W = 0.97007, p-value = 0.04972</code></pre>
+<pre class="r"><code>coeftest(fit1, vcov = vcovHC(fit1))</code></pre>
+<pre><code>## 
+## t test of coefficients:
+## 
+##                   Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)      17.608612   1.085408 16.2230  &lt; 2e-16 ***
+## Color             0.022743   1.231405  0.0185  0.98531    
+## Incubate_c        0.014778   0.800783  0.0185  0.98532    
+## Color:Incubate_c  1.736164   0.883190  1.9658  0.05284 .  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<pre class="r"><code>boot_dat &lt;- sample_frac(BirdNest, replace = T)
+
+
+samp_distn &lt;- replicate(5000, {
+    boot_dat &lt;- sample_frac(BirdNest, replace = T)
+    fit1 &lt;- lm(Length ~ Color * Incubate, data = boot_dat)
+    coef(fit1)
+})
+
+
+samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% summarize_all(sd)</code></pre>
+<pre><code>##   (Intercept)    Color  Incubate Color:Incubate
+## 1    11.84459 12.76795 0.8864486      0.9597212</code></pre>
+<p><em>For the intercept, 17.608 is the mean/predicted length for solid/plain colored eggs with a mean incubation time of 13.35. For birds with an average incubation time, speckled/spotted eggs have a predicted length that is 0.0227 greater (t=.017, p=.9867). For every one unit increase in incubation time, predicted length goes up by 0.015 for speckled/spotted eggs (t=.016, p=.9872). The slope for length on incubate is 1.736 greater for speckled or spotted eggs than for solid colored eggs (t=1.77, p=.0806). The assumptions of homoskedasticity, linearity, and normality all appear to be met. There are no significant results after running the linear regression model.This model explains .2271 proportion of the variation of the outcome (adjusted R-squared). After performing the robust standard errors, compared to the original SEs, the SEs decreased by a small amount for each value while the p-values remained about the same for color and incubate_c but slightly decreased for the interaction. None of the results are significant, although the interaction is very close to being significant. After performing the bootstrapped SEs, the SE for color and the intercept is much higher than the original SE, while the incubate and color:incubate SEs are about the same as the original SEs.</em></p>
+</div>
+<div id="fitted-logistic-regression" class="section level5">
+<h5>Fitted Logistic Regression</h5>
+<pre class="r"><code>library(glmnet)
+BirdNest1 &lt;- BirdNest %&gt;% mutate(y = ifelse(Color == &quot;1&quot;, 1, 
+    0))
+fitlog &lt;- glm(y ~ Nesttype + Location, data = BirdNest1, family = binomial(link = &quot;logit&quot;))
+coeftest(fitlog)</code></pre>
+<pre><code>## 
+## z test of coefficients:
+## 
+##                      Estimate  Std. Error z value Pr(&gt;|z|)
+## (Intercept)       -2.0566e+01  1.2537e+04 -0.0016   0.9987
+## Nesttypecavity     4.0759e+01  2.8396e+04  0.0014   0.9989
+## Nesttypecrevice    4.1132e+01  2.1715e+04  0.0019   0.9985
+## Nesttypecup        2.2032e+01  2.8034e+04  0.0008   0.9994
+## Nesttypependant    2.2435e+01  3.1088e+04  0.0007   0.9994
+## Nesttypesaucer     4.0718e+01  2.9258e+04  0.0014   0.9989
+## Nesttypespherical  4.1212e+01  3.0710e+04  0.0013   0.9989
+## Locationbridge    -2.2032e+01  3.0710e+04 -0.0007   0.9994
+## Locationbuilding   1.8171e+01  2.7439e+04  0.0007   0.9995
+## Locationcliff     -4.1132e+01  2.5075e+04 -0.0016   0.9987
+## Locationconif      1.8697e+01  2.5536e+04  0.0007   0.9994
+## Locationdecid      3.7740e-02  2.5075e+04  0.0000   1.0000
+## Locationground    -2.8188e-07  2.5075e+04  0.0000   1.0000
+## Locationshrub     -8.0043e-02  2.5075e+04  0.0000   1.0000
+## Locationsnag      -2.0887e+01  2.5479e+04 -0.0008   0.9993</code></pre>
+<pre class="r"><code>exp(coef(fitlog))</code></pre>
+<pre><code>##       (Intercept)    Nesttypecavity   Nesttypecrevice       Nesttypecup 
+##      1.170226e-09      5.030563e+17      7.302310e+17      3.702988e+09 
+##   Nesttypependant    Nesttypesaucer Nesttypespherical    Locationbridge 
+##      5.539299e+09      4.824966e+17      7.910836e+17      2.700522e-10 
+##  Locationbuilding     Locationcliff     Locationconif     Locationdecid 
+##      7.790428e+07      1.369430e-18      1.318273e+08      1.038461e+00 
+##    Locationground     Locationshrub      Locationsnag 
+##      9.999997e-01      9.230767e-01      8.493437e-10</code></pre>
+<pre class="r"><code>summary(fitlog)</code></pre>
+<pre><code>## 
+## Call:
+## glm(formula = y ~ Nesttype + Location, family = binomial(link = &quot;logit&quot;), 
+##     data = BirdNest1)
+## 
+## Deviance Residuals: 
+##      Min        1Q    Median        3Q       Max  
+## -1.84648   0.00005   0.00006   0.64442   1.48230  
+## 
+## Coefficients:
+##                     Estimate Std. Error z value Pr(&gt;|z|)
+## (Intercept)       -2.057e+01  1.254e+04  -0.002    0.999
+## Nesttypecavity     4.076e+01  2.840e+04   0.001    0.999
+## Nesttypecrevice    4.113e+01  2.172e+04   0.002    0.998
+## Nesttypecup        2.203e+01  2.803e+04   0.001    0.999
+## Nesttypependant    2.244e+01  3.109e+04   0.001    0.999
+## Nesttypesaucer     4.072e+01  2.926e+04   0.001    0.999
+## Nesttypespherical  4.121e+01  3.071e+04   0.001    0.999
+## Locationbridge    -2.203e+01  3.071e+04  -0.001    0.999
+## Locationbuilding   1.817e+01  2.744e+04   0.001    0.999
+## Locationcliff     -4.113e+01  2.507e+04  -0.002    0.999
+## Locationconif      1.870e+01  2.554e+04   0.001    0.999
+## Locationdecid      3.774e-02  2.507e+04   0.000    1.000
+## Locationground    -2.819e-07  2.507e+04   0.000    1.000
+## Locationshrub     -8.004e-02  2.507e+04   0.000    1.000
+## Locationsnag      -2.089e+01  2.548e+04  -0.001    0.999
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 75.327  on 82  degrees of freedom
+## Residual deviance: 44.705  on 68  degrees of freedom
+## AIC: 74.705
+## 
+## Number of Fisher Scoring iterations: 19</code></pre>
+<pre class="r"><code>prob &lt;- predict(fitlog, type = &quot;response&quot;)
+pred &lt;- ifelse(prob &gt; 0.5, 1, 0)
+table(truth = BirdNest1$Color, prediction = pred) %&gt;% addmargins</code></pre>
+<pre><code>##      prediction
+## truth  0  1 Sum
+##   0    6  8  14
+##   1    1 68  69
+##   Sum  7 76  83</code></pre>
+<pre class="r"><code>class_diag &lt;- function(probs, truth) {
+    # CONFUSION MATRIX: CALCULATE ACCURACY, TPR, TNR, PPV
+    
+    if (is.character(truth) == TRUE) 
+        truth &lt;- as.factor(truth)
+    if (is.numeric(truth) == FALSE &amp; is.logical(truth) == FALSE) 
+        truth &lt;- as.numeric(truth) - 1
+    
+    tab &lt;- table(factor(probs &gt; 0.5, levels = c(&quot;FALSE&quot;, &quot;TRUE&quot;)), 
+        factor(truth, levels = c(0, 1)))
+    acc = sum(diag(tab))/sum(tab)
+    sens = tab[2, 2]/colSums(tab)[2]
+    spec = tab[1, 1]/colSums(tab)[1]
+    ppv = tab[2, 2]/rowSums(tab)[2]
+    f1 = 2 * (sens * ppv)/(sens + ppv)
+    
+    # CALCULATE EXACT AUC
+    ord &lt;- order(probs, decreasing = TRUE)
+    probs &lt;- probs[ord]
+    truth &lt;- truth[ord]
+    
+    TPR = cumsum(truth)/max(1, sum(truth))
+    FPR = cumsum(!truth)/max(1, sum(!truth))
+    
+    dup &lt;- c(probs[-1] &gt;= probs[-length(probs)], FALSE)
+    TPR &lt;- c(0, TPR[!dup], 1)
+    FPR &lt;- c(0, FPR[!dup], 1)
+    n &lt;- length(TPR)
+    auc &lt;- sum(((TPR[-1] + TPR[-n])/2) * (FPR[-1] - FPR[-n]))
+    
+    data.frame(acc, sens, spec, ppv, f1, auc)
+}
+class_diag(prob, BirdNest$Color)</code></pre>
+<pre><code>##         acc      sens      spec       ppv       f1       auc
+## 1 0.8915663 0.9855072 0.4285714 0.8947368 0.937931 0.8535197</code></pre>
+<pre class="r"><code>ggplot(BirdNest1, aes(x = Nesttype, y = Location, group = Color)) + 
+    geom_point(aes(color = Color)) + geom_smooth(method = &quot;lm&quot;, 
+    formula = y ~ 1, se = F, fullrange = T, aes(color = Color)) + 
+    theme(legend.position = c(0.9, 0.19)) + xlab(&quot;&quot;)</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>BirdNest1$logit &lt;- predict(fitlog)
+
+BirdNest1$Color &lt;- as.factor(BirdNest1$Color)
+BirdNest1 %&gt;% ggplot() + geom_density(aes(logit, color = Color, 
+    fill = Color), alpha = 0.4) + theme(legend.position = c(0.85, 
+    0.85)) + geom_vline(xintercept = 0) + xlab(&quot;logit (log-odds)&quot;) + 
+    geom_rug(aes(logit, color = Color))</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-4-2.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>library(plotROC)
+
+ROCplot &lt;- ggplot(fitlog) + geom_roc(aes(d = y, m = prob), n.cuts = 0)
+
+ROCplot</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-4-3.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>calc_auc(ROCplot)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.8535197</code></pre>
+<p><em>The intercept indicates that the odds of having a burrow nest type and bank location with solid colored eggs are 1.17x10^-9. Controlling for location, the odds of having spotted/speckled eggs are 5.03x10^17 times more likely for cavity nests, the odds of spotted/speckled eggs are 7.302x10^17 times more likely for a cup nest, the odds of spotted/speckled eggs are 3.703x10^9 times more likely for a pendant nest type, etc. When controlling for nest type, the odds of having spotted/speckled eggs are 2.7x10^-10 times less likely for bridge locations, the odds of having speckled/spotted eggs are 7.79x10^7 more likely for building locations, the odds of having spotted/speckled eggs are 1.37x10^-18 less likely for cliff locations, etc. The accuracy is .892, sensitivity (true positive rate) is .986, specificity (true negative rate) is .429, precision is .895, and AUC is .854. These values are all close to 1 and indicate that the probability of detecting the true color of the egg (speckled/spotted) is high as well as the probability of predicting eggs that are not speckled/spotted. The precision value is the proportion of eggs that are classified as speckled/spotted that actually are that color. The ROC curve give us the area under the curve, which is .854 and is a good predictor. The AUC value is the probability that a randomly selected bird with spotted/speckled eggs has a higher predicted probability than a randomly selected bird with solid colored eggs.</em></p>
+</div>
+<div id="logistic-regression-part-2" class="section level5">
+<h5>Logistic Regression part 2</h5>
+<pre class="r"><code>BirdNest1 &lt;- BirdNest1 %&gt;% select(-logit, -Color)
+whoofit &lt;- glm(y ~ Nestling + Incubate + Location + Nesttype + 
+    Length, data = BirdNest1, family = binomial(link = &quot;logit&quot;))
+prob &lt;- predict(whoofit, type = &quot;response&quot;)
+pred &lt;- ifelse(prob &gt; 0.5, 1, 0)
+table(truth = BirdNest1$y, prediction = pred) %&gt;% addmargins</code></pre>
+<pre><code>##      prediction
+## truth  0  1 Sum
+##   0    6  8  14
+##   1    1 68  69
+##   Sum  7 76  83</code></pre>
+<pre class="r"><code>class_diag(prob, BirdNest1$y)</code></pre>
+<pre><code>##         acc      sens      spec       ppv       f1       auc
+## 1 0.8915663 0.9855072 0.4285714 0.8947368 0.937931 0.9099379</code></pre>
+<pre class="r"><code>library(glmnet)
+set.seed(1234)
+y &lt;- as.matrix(BirdNest1$y)
+bird_preds &lt;- model.matrix(y ~ ., data = BirdNest1)[, -1]
+head(bird_preds)</code></pre>
+<pre><code>##   SpeciesAlauda arvensis SpeciesAnthus spinoletta
+##   SpeciesAphelocoma coerulescens SpeciesAuriparus flaviceps
+##   SpeciesBombycilla cedrorum SpeciesCalamospiza melanocorys
+##   SpeciesCalarius ornatus SpeciesCampylorhynchus brunneicapillus
+##   SpeciesCardinalis cardinalis SpeciesCarduelis pinus SpeciesCarduelis tristis
+##   SpeciesCarpodacus mexicanus SpeciesCarpodacus purpureus
+##   SpeciesCatharus guttatus SpeciesCatharus ustulatus
+##   SpeciesChondestes grammacus SpeciesCinclus mexicanus
+##   SpeciesCyanocitta cristata SpeciesDendroica striata SpeciesDendroica virens
+##   SpeciesDolichonyx oryzivorus SpeciesDumetella carolinensis
+##   SpeciesEmpidonax wrightii SpeciesEremophila alpestris
+##   SpeciesGymnorhina cyanocephalus SpeciesHelmitheros vermivorus
+##   SpeciesHirundo rustica SpeciesHylocichla mustelina SpeciesIcteria virens
+##   SpeciesJunco hyemalis SpeciesLanius excubitor SpeciesLanius ludovicianus
+##   SpeciesLeucosticte arctoa SpeciesMelospiza georgiana
+##   SpeciesMelospiza lincolnii SpeciesMelospiza melodia SpeciesMimus polyglottos
+##   SpeciesMotacilla alba SpeciesMotacilla flava SpeciesMyarchus tuberculifer
+##   SpeciesMyiarchus cinerascens SpeciesMyiarchus tyrannulus
+##   SpeciesMyioborus pictus SpeciesMyiodynastes luteiventris
+##   SpeciesNucifraga columbiana SpeciesOreoscoptes montanus
+##   SpeciesParus atricapillus SpeciesParus bicolor SpeciesPasser domesticus
+##   SpeciesPerisoreus canadensis SpeciesPhainopepla nitens
+##   SpeciesPheucticus ludovicianus SpeciesPinicola enucleator
+##   SpeciesPiranga olivacea SpeciesPlectrophenax nivalis
+##   SpeciesPolioptila melanura SpeciesPooecetes gramineus
+##   SpeciesProtonotaria citrea SpeciesPyrocephalus rubinus
+##   SpeciesRegulus calendula SpeciesRegulus satrapa SpeciesRiparia riparia
+##   SpeciesSayornis phoebe SpeciesSialia currucoides SpeciesSialia sialis
+##   SpeciesSitta canadensis SpeciesSitta carolinensis SpeciesSitta pygmaea
+##   SpeciesSpizella arborea SpeciesStelgidopteryx serripennis
+##   SpeciesSturnus vulgaris SpeciesThryomanes bewickii
+##   SpeciesThryothorus ludovicianus SpeciesToxostoma curvirostre
+##   SpeciesToxostoma redivivum SpeciesToxostoma rufum SpeciesTroglodytes aedon
+##   SpeciesTurdus migratorius SpeciesTyrannus tyrannus SpeciesVermivora pinus
+##   SpeciesVireo olivaceus SpeciesVireo solitarius CommonAmerican Goldfinch
+##   CommonAmerican Robin CommonAmerican Tree Sparrow CommonAsh-thoated Flycatcher
+##   CommonBank Swallow CommonBarn Swallow CommonBewick&#39;s Wren
+##   CommonBlack-capped Chickadee CommonBlack-tailed Gnatcatcher
+##   CommonBlack-throated Green Warbler CommonBlackpoll Warbler CommonBlue Jay
+##   CommonBlue-winged Warbler CommonBobolink CommonBrown Thrasher
+##   CommonBrown-crested Flycatcher CommonCactus Wren CommonCalifornia Thrasher
+##   CommonCarolina Wren CommonCedar Waxwing CommonChestnut-collared Longspur
+##   CommonClark&#39;s Nutcracker CommonCray Jay CommonCurve-billed Thrasher
+##   CommonDark-eyed Junco CommonDusky-capped Flycatcher CommonEastern Bluebird
+##   CommonEastern Kingbird CommonEastern Phoebe CommonEurasion Skylark
+##   CommonEuropean Starling CommonGolden-crowned Kinglet CommonGray Catbird
+##   CommonGray Flycatcher CommonHermit Thrush CommonHorned Lark CommonHouse Finch
+##   CommonHouse Sparrow CommonHouse Wren CommonLark Bunting CommonLark Sparrow
+##   CommonLincoln&#39;s Sparrow CommonLoggerhead Shrike CommonMountain Bluebird
+##   CommonNorthern Cardinal CommonNorthern Mockingbird
+##   CommonNorthern Rough-winged Swallow CommonNorthern Shrike
+##   CommonPainted Redstart CommonPhainopepla CommonPine Grosbeak
+##   CommonPine Siskin CommonPinyon Jay CommonProthonotary Warbler
+##   CommonPurple Finch CommonPygmy Nuthatch CommonRed-breasted Nuthatch
+##   CommonRed-eyed Vireo CommonRed-winged Blackbird CommonRose-breasted Grosbeak
+##   CommonRosy Finch CommonRuby-crowned Kinglet CommonSage Thrush
+##   CommonScarlet Tanager CommonScrub Jay CommonSnow Bunting CommonSolitary Vireo
+##   CommonSong Sparrow CommonSulphur-bellied Flycatcher CommonSwainson&#39;s Thrush
+##   CommonSwamp Sparrow CommonTufted Titmouse CommonVerdin
+##   CommonVermillion Flycatcher CommonVesper Sparrow CommonWater Pipit
+##   CommonWhite Wagtail CommonWhite-breasted Nuthatch CommonWood Thrush
+##   CommonWorm-eating Warbler CommonYellow Wagtail CommonYellow-breasted Chat
+##   Length Nesttypecavity Nesttypecrevice Nesttypecup Nesttypependant
+##   Nesttypesaucer Nesttypespherical Locationbridge Locationbuilding
+##   Locationcliff Locationconif Locationdecid Locationground Locationshrub
+##   Locationsnag No.eggs Incubate Nestling Totcare Closed. Incubate_c
+##  [ reached getOption(&quot;max.print&quot;) -- omitted 6 rows ]</code></pre>
+<pre class="r"><code>head(BirdNest1)</code></pre>
+<pre><code>##                     Species                     Common Length Nesttype Location
+## 1         Tyrannus tyrannus           Eastern Kingbird   20.0      cup    decid
+## 2 Myiodynastes luteiventris Sulphur-bellied Flycatcher   20.0   cavity    decid
+## 3     Myiarchus cinerascens     Ash-thoated Flycatcher   20.0   cavity    decid
+## 4      Myiarchus tyrannulus   Brown-crested Flycatcher   22.5   cavity    decid
+## 5     Myarchus tuberculifer    Dusky-capped Flycatcher   17.0   cavity    decid
+## 6           Sayornis phoebe             Eastern Phoebe   17.0      cup   bridge
+##   No.eggs Incubate Nestling Totcare Closed. Incubate_c y
+## 1     3.5     17.0     17.0    34.0       0  3.6506024 1
+## 2     3.5     15.5     17.0    32.5       1  2.1506024 1
+## 3     4.5     15.0     15.0    30.0       1  1.6506024 1
+## 4     4.5     14.0     16.5    30.5       1  0.6506024 1
+## 5     4.5     14.0     14.0    28.0       1  0.6506024 1
+## 6     4.5     16.0     15.5    31.5       0  2.6506024 0</code></pre>
+<pre class="r"><code>str(BirdNest1)</code></pre>
+<pre><code>## &#39;data.frame&#39;:    83 obs. of  12 variables:
+##  $ Species   : chr  &quot;Tyrannus tyrannus&quot; &quot;Myiodynastes luteiventris&quot; &quot;Myiarchus cinerascens&quot; &quot;Myiarchus tyrannulus&quot; ...
+##  $ Common    : chr  &quot;Eastern Kingbird&quot; &quot;Sulphur-bellied Flycatcher&quot; &quot;Ash-thoated Flycatcher&quot; &quot;Brown-crested Flycatcher&quot; ...
+##  $ Length    : num  20 20 20 22.5 17 17 15 15 18.5 19 ...
+##  $ Nesttype  : chr  &quot;cup&quot; &quot;cavity&quot; &quot;cavity&quot; &quot;cavity&quot; ...
+##  $ Location  : Factor w/ 9 levels &quot;bank&quot;,&quot;bridge&quot;,..: 6 6 6 6 6 2 8 6 7 7 ...
+##  $ No.eggs   : num  3.5 3.5 4.5 4.5 4.5 4.5 3.5 3 3.5 3.5 ...
+##  $ Incubate  : num  17 15.5 15 14 14 16 14 14.5 11.5 11.5 ...
+##  $ Nestling  : num  17 17 15 16.5 14 15.5 16 15 9.5 10.5 ...
+##  $ Totcare   : num  34 32.5 30 30.5 28 31.5 30 29.5 21 22 ...
+##  $ Closed.   : int  0 1 1 1 1 0 0 0 0 0 ...
+##  $ Incubate_c: num  3.651 2.151 1.651 0.651 0.651 ...
+##  $ y         : num  1 1 1 1 1 0 0 1 1 1 ...</code></pre>
+<pre class="r"><code>class_diag &lt;- function(probs, truth) {
+    # CONFUSION MATRIX: CALCULATE ACCURACY, TPR, TNR, PPV
+    
+    if (is.character(truth) == TRUE) 
+        truth &lt;- as.factor(truth)
+    if (is.numeric(truth) == FALSE &amp; is.logical(truth) == FALSE) 
+        truth &lt;- as.numeric(truth) - 1
+    
+    tab &lt;- table(factor(probs &gt; 0.5, levels = c(&quot;FALSE&quot;, &quot;TRUE&quot;)), 
+        factor(truth, levels = c(0, 1)))
+    acc = sum(diag(tab))/sum(tab)
+    sens = tab[2, 2]/colSums(tab)[2]
+    spec = tab[1, 1]/colSums(tab)[1]
+    ppv = tab[2, 2]/rowSums(tab)[2]
+    f1 = 2 * (sens * ppv)/(sens + ppv)
+    
+    # CALCULATE EXACT AUC
+    ord &lt;- order(probs, decreasing = TRUE)
+    probs &lt;- probs[ord]
+    truth &lt;- truth[ord]
+    
+    TPR = cumsum(truth)/max(1, sum(truth))
+    FPR = cumsum(!truth)/max(1, sum(!truth))
+    
+    dup &lt;- c(probs[-1] &gt;= probs[-length(probs)], FALSE)
+    TPR &lt;- c(0, TPR[!dup], 1)
+    FPR &lt;- c(0, FPR[!dup], 1)
+    n &lt;- length(TPR)
+    auc &lt;- sum(((TPR[-1] + TPR[-n])/2) * (FPR[-1] - FPR[-n]))
+    
+    data.frame(acc, sens, spec, ppv, f1, auc)
+}
+set.seed(1234)
+k = 10
+data &lt;- BirdNest1 %&gt;% sample_frac
+folds &lt;- ntile(1:nrow(data), n = 10)
+diags &lt;- NULL
+for (i in 1:k) {
+    train &lt;- data[folds != i, ]
+    test &lt;- data[folds == i, ]
+    truth &lt;- test$y
+    fit &lt;- glm(y ~ (.)^2, data = train, family = &quot;binomial&quot;)
+    probs &lt;- predict(whoofit, newdata = test, type = &quot;response&quot;)
+    diags &lt;- rbind(diags, class_diag(probs, truth))
+}
+summarize_all(diags, mean)</code></pre>
+<pre><code>##         acc      sens spec      ppv        f1       auc
+## 1 0.8916667 0.9857143  NaN 0.902381 0.9369963 0.9380952</code></pre>
+<pre class="r"><code>cv &lt;- cv.glmnet(bird_preds, y, family = &quot;binomial&quot;)
+
+
+{
+    plot(cv$glmnet.fit, &quot;lambda&quot;, label = TRUE)
+    abline(v = log(cv$lambda.1se))
+    abline(v = log(cv$lambda.min), lty = 2)
+}</code></pre>
+<p><img src="/project/project2_files/figure-html/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>cv &lt;- cv.glmnet(bird_preds, y, family = &quot;binomial&quot;)
+lasso_fit &lt;- glmnet(bird_preds, y, family = &quot;binomial&quot;, lambda = cv$lambda.1se)
+coef(lasso_fit)</code></pre>
+<pre><code>## 186 x 1 sparse Matrix of class &quot;dgCMatrix&quot;
+##                                              s0
+## (Intercept)                            1.595049
+## SpeciesAlauda arvensis                 .       
+## SpeciesAnthus spinoletta               .       
+## SpeciesAphelocoma coerulescens         .       
+## SpeciesAuriparus flaviceps             .       
+## SpeciesBombycilla cedrorum             .       
+## SpeciesCalamospiza melanocorys         .       
+## SpeciesCalarius ornatus                .       
+## SpeciesCampylorhynchus brunneicapillus .       
+## SpeciesCardinalis cardinalis           .       
+## SpeciesCarduelis pinus                 .       
+## SpeciesCarduelis tristis               .       
+## SpeciesCarpodacus mexicanus            .       
+## SpeciesCarpodacus purpureus            .       
+## SpeciesCatharus guttatus               .       
+## SpeciesCatharus ustulatus              .       
+## SpeciesChondestes grammacus            .       
+## SpeciesCinclus mexicanus               .       
+## SpeciesCyanocitta cristata             .       
+## SpeciesDendroica striata               .       
+## SpeciesDendroica virens                .       
+## SpeciesDolichonyx oryzivorus           .       
+## SpeciesDumetella carolinensis          .       
+## SpeciesEmpidonax wrightii              .       
+## SpeciesEremophila alpestris            .       
+## SpeciesGymnorhina cyanocephalus        .       
+## SpeciesHelmitheros vermivorus          .       
+## SpeciesHirundo rustica                 .       
+## SpeciesHylocichla mustelina            .       
+## SpeciesIcteria virens                  .       
+## SpeciesJunco hyemalis                  .       
+## SpeciesLanius excubitor                .       
+## SpeciesLanius ludovicianus             .       
+## SpeciesLeucosticte arctoa              .       
+## SpeciesMelospiza georgiana             .       
+## SpeciesMelospiza lincolnii             .       
+## SpeciesMelospiza melodia               .       
+## SpeciesMimus polyglottos               .       
+## SpeciesMotacilla alba                  .       
+## SpeciesMotacilla flava                 .       
+## SpeciesMyarchus tuberculifer           .       
+## SpeciesMyiarchus cinerascens           .       
+## SpeciesMyiarchus tyrannulus            .       
+## SpeciesMyioborus pictus                .       
+## SpeciesMyiodynastes luteiventris       .       
+## SpeciesNucifraga columbiana            .       
+## SpeciesOreoscoptes montanus            .       
+## SpeciesParus atricapillus              .       
+## SpeciesParus bicolor                   .       
+## SpeciesPasser domesticus               .       
+## 
+##  ..............................
+##  ........suppressing 86 rows in show(); maybe adjust &#39;options(max.print= *, width = *)&#39;
+##  ..............................
+##                                             s0
+## CommonProthonotary Warbler        .           
+## CommonPurple Finch                .           
+## CommonPygmy Nuthatch              .           
+## CommonRed-breasted Nuthatch       .           
+## CommonRed-eyed Vireo              .           
+## CommonRed-winged Blackbird        .           
+## CommonRose-breasted Grosbeak      .           
+## CommonRosy Finch                  .           
+## CommonRuby-crowned Kinglet        .           
+## CommonSage Thrush                 .           
+## CommonScarlet Tanager             .           
+## CommonScrub Jay                   .           
+## CommonSnow Bunting                .           
+## CommonSolitary Vireo              .           
+## CommonSong Sparrow                .           
+## CommonSulphur-bellied Flycatcher  .           
+## CommonSwainson&#39;s Thrush           .           
+## CommonSwamp Sparrow               .           
+## CommonTufted Titmouse             .           
+## CommonVerdin                      .           
+## CommonVermillion Flycatcher       .           
+## CommonVesper Sparrow              .           
+## CommonWater Pipit                 .           
+## CommonWhite Wagtail               .           
+## CommonWhite-breasted Nuthatch     .           
+## CommonWood Thrush                 .           
+## CommonWorm-eating Warbler         .           
+## CommonYellow Wagtail              .           
+## CommonYellow-breasted Chat        .           
+## Length                            .           
+## Nesttypecavity                    .           
+## Nesttypecrevice                   .           
+## Nesttypecup                       .           
+## Nesttypependant                   .           
+## Nesttypesaucer                    .           
+## Nesttypespherical                 .           
+## Locationbridge                    .           
+## Locationbuilding                  .           
+## Locationcliff                     .           
+## Locationconif                     .           
+## Locationdecid                     .           
+## Locationground                    .           
+## Locationshrub                     .           
+## Locationsnag                     -1.060478e-15
+## No.eggs                           .           
+## Incubate                          .           
+## Nestling                          .           
+## Totcare                           .           
+## Closed.                           .           
+## Incubate_c                        .</code></pre>
+<pre class="r"><code>probs &lt;- predict(lasso_fit, bird_preds, type = &quot;response&quot;)
+truth &lt;- BirdNest1$y
+
+class_diag &lt;- function(probs, truth) {
+    tab &lt;- table(factor(probs &gt; 0.5, levels = c(&quot;FALSE&quot;, &quot;TRUE&quot;)), 
+        truth)
+    acc = sum(diag(tab))/sum(tab)
+    sens = tab[2, 2]/colSums(tab)[2]
+    spec = tab[1, 1]/colSums(tab)[1]
+    ppv = tab[2, 2]/rowSums(tab)[2]
+    f1 = 2 * (sens * ppv)/(sens + ppv)
+    
+    if (is.numeric(truth) == FALSE &amp; is.logical(truth) == FALSE) 
+        truth &lt;- as.numeric(truth) - 1
+    
+    ord &lt;- order(probs, decreasing = TRUE)
+    probs &lt;- probs[ord]
+    truth &lt;- truth[ord]
+    
+    TPR = cumsum(truth)/max(1, sum(truth))
+    FPR = cumsum(!truth)/max(1, sum(!truth))
+    
+    dup &lt;- c(probs[-1] &gt;= probs[-length(probs)], FALSE)
+    TPR &lt;- c(0, TPR[!dup], 1)
+    FPR &lt;- c(0, FPR[!dup], 1)
+    n &lt;- length(TPR)
+    auc &lt;- sum(((TPR[-1] + TPR[-n])/2) * (FPR[-1] - FPR[-n]))
+    
+    data.frame(acc, sens, spec, ppv, f1, auc)
+}
+class_diag(prob, BirdNest1$y)</code></pre>
+<pre><code>##         acc      sens      spec       ppv       f1       auc
+## 1 0.8915663 0.9855072 0.4285714 0.8947368 0.937931 0.9099379</code></pre>
+<pre class="r"><code>table(prediction = as.numeric(prob &gt; 0.5), truth = BirdNest1$y) %&gt;% 
+    addmargins</code></pre>
+<pre><code>##           truth
+## prediction  0  1 Sum
+##        0    6  1   7
+##        1    8 68  76
+##        Sum 14 69  83</code></pre>
+<pre class="r"><code>set.seed(1234)
+k = 5
+poke_mybelly &lt;- BirdNest1 %&gt;% mutate(Locationsnag = ifelse(Location == 
+    &quot;snag&quot;, 1, 0), )
+
+whoabro &lt;- poke_mybelly %&gt;% sample_frac
+folds &lt;- ntile(1:nrow(whoabro), n = 5)
+
+
+diags &lt;- NULL
+for (i in 1:k) {
+    train &lt;- whoabro[folds != i, ]
+    test &lt;- whoabro[folds == i, ]
+    truth &lt;- test$y
+    
+    fit &lt;- glm(y ~ Locationsnag, data = train, family = &quot;binomial&quot;)
+    probs &lt;- predict(fit, newdata = test, type = &quot;response&quot;)
+    
+    diags &lt;- rbind(diags, class_diag(probs, truth))
+}
+
+summarize_all(diags, mean)</code></pre>
+<pre><code>##         acc      sens      spec       ppv        f1      auc
+## 1 0.8426471 0.9846154 0.1166667 0.8490756 0.9112007 0.550641</code></pre>
+<p><em>For the in-sample model, the accuracy is .892, sensitivity is .986, specificity is .429, precision is .895, and auc is .91. The sensitivity indicates the probability of detecting the true color of the egg (speckled/spotted) is high when comparing nestling, incubate, length, nest type, and location while the probability of predicting eggs that are not speckled/spotted are not good since the specificity is so low. The precision value is the proportion of eggs that are classified as speckled/spotted that actually are that color when looking at the other variables. The AUC value is a great predictor and shows the probability that a randomly selected bird with spotted/speckled eggs has a higher predicted probability than a randomly selected bird with solid colored eggs. After performing the 10-fold cv with the in-sample model, the out-of-sample classification diagnostics include an accuracy of .892, sensitivity of .896, precision of.902, and an auc of .938. All of the values are very similar while the AUC went up slightly and is still a great predictor. This indicates that there is not evidence of overfitting in the model. The only variable that is retained after performing lasso is the snag location. For the 10-fold cv using only the snag location, the accuracy is .843, sensitivity is .985, specificity is .117, precision is .849, and auc is .551. The sensitivity indicates that the probability of detecting spotted/speckled that are truly that color is very high when looking only at the snag location. Specificity, on the other hand, is very low which indicates that predicting the probability of eggs that are not speckled/spotted is poor when looking at the snag location. The precision is pretty good which indicates that the proportion of speckled/spotted eggs that get classified as such are relatively high. The auc value is very low which indicates that this model is a bad predictor of egg color when looking at snag location. These values are all much lower (except for the sensitivity) than the out-of-sample diagnostics which indicates that there is evidence of overfitting in this model. </em></p>
+<pre><code>## R version 3.6.1 (2019-07-05)
+## Platform: x86_64-pc-linux-gnu (64-bit)
+## Running under: Ubuntu 18.04.5 LTS
+## 
+## Matrix products: default
+## BLAS:   /stor/system/opt/R/R-3.6.1/lib/R/lib/libRblas.so
+## LAPACK: /stor/system/opt/R/R-3.6.1/lib/R/lib/libRlapack.so
+## 
+## locale:
+##  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+##  [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+##  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+##  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+##  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+## [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+## 
+## attached base packages:
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
+## 
+## other attached packages:
+##  [1] plotROC_2.2.1   glmnet_4.0-2    Matrix_1.2-17   lmtest_0.9-38  
+##  [5] zoo_1.8-8       sandwich_3.0-0  rstatix_0.6.0   forcats_0.5.0  
+##  [9] stringr_1.4.0   dplyr_1.0.1     purrr_0.3.4     readr_1.3.1    
+## [13] tidyr_1.1.1     tibble_3.0.3    ggplot2_3.3.2   tidyverse_1.3.0
+## [17] Stat2Data_2.0.0
+## 
+## loaded via a namespace (and not attached):
+##  [1] nlme_3.1-148      fs_1.5.0          lubridate_1.7.9   httr_1.4.2       
+##  [5] tools_3.6.1       backports_1.1.8   utf8_1.1.4        R6_2.4.1         
+##  [9] DBI_1.1.0         mgcv_1.8-31       colorspace_1.4-1  withr_2.2.0      
+## [13] tidyselect_1.1.0  curl_4.3          compiler_3.6.1    cli_2.0.2        
+## [17] rvest_0.3.6       formatR_1.7       xml2_1.3.2        labeling_0.3     
+## [21] bookdown_0.20     scales_1.1.1      digest_0.6.25     foreign_0.8-71   
+## [25] rmarkdown_2.3     rio_0.5.16        pkgconfig_2.0.3   htmltools_0.5.0  
+## [29] dbplyr_1.4.4      rlang_0.4.7       readxl_1.3.1      rstudioapi_0.11  
+## [33] shape_1.4.5       farver_2.0.3      generics_0.0.2    jsonlite_1.7.0   
+## [37] zip_2.1.0         car_3.0-8         magrittr_1.5      Rcpp_1.0.5       
+## [41] munsell_0.5.0     fansi_0.4.1       abind_1.4-5       lifecycle_0.2.0  
+## [45] stringi_1.5.3     yaml_2.2.1        carData_3.0-4     plyr_1.8.6       
+## [49] grid_3.6.1        blob_1.2.1        crayon_1.3.4      lattice_0.20-41  
+## [53] haven_2.3.1       splines_3.6.1     hms_0.5.3         knitr_1.29       
+## [57] pillar_1.4.6      codetools_0.2-16  reprex_0.3.0      glue_1.4.2       
+## [61] evaluate_0.14     blogdown_0.20     data.table_1.13.0 modelr_0.1.8     
+## [65] vctrs_0.3.2       foreach_1.5.0     cellranger_1.1.0  gtable_0.3.0     
+## [69] assertthat_0.2.1  xfun_0.16         openxlsx_4.1.5    broom_0.7.0      
+## [73] survival_3.2-7    iterators_1.0.12  ellipsis_0.3.1</code></pre>
+<pre><code>## [1] &quot;2020-12-11 09:49:21 CST&quot;</code></pre>
+<pre><code>##                                       sysname 
+##                                       &quot;Linux&quot; 
+##                                       release 
+##                          &quot;4.15.0-117-generic&quot; 
+##                                       version 
+## &quot;#118-Ubuntu SMP Fri Sep 4 20:02:41 UTC 2020&quot; 
+##                                      nodename 
+##                  &quot;educcomp04.ccbb.utexas.edu&quot; 
+##                                       machine 
+##                                      &quot;x86_64&quot; 
+##                                         login 
+##                                     &quot;unknown&quot; 
+##                                          user 
+##                                     &quot;sms7265&quot; 
+##                                effective_user 
+##                                     &quot;sms7265&quot;</code></pre>
+</div>
+</div>

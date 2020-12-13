@@ -1,0 +1,48 @@
+baseurl = "/"
+languageCode = "en-US"
+title = "Samantha Snyder"
+# Enable comments by entering your Disqus shortname
+disqusShortname = ""
+# Enable Google Analytics by entering your tracking code
+googleAnalytics = ""
+theme = "hugo-sustain"
+
+[permalinks]
+  post = "/post/:year/:month/:day/:slug"
+
+[params]
+  avatar = "IMG_6227 2.jpg"
+  author = "Samantha Snyder"
+  occupation = "Biology and Exercise Science Student at The University of Texas at Austin"
+  about = "Microbiology is my passion and I love yoga, baking, and dogs."
+
+  # Custom assets can be linked with their paths relative to static/
+  custom_css = []
+  custom_js  = []
+
+[params.social]
+  Github        = "sammarie4545"
+  Email         = "sammarie4545@yahoo.com"
+  Twitter       = "@samsnyder45"
+  LinkedIn      = "Samantha Snyder"
+  Instagram     = "sam_snyder45"
+#  Stackoverflow = "username"
+#  Medium        = "username"
+#  Telegram      = "username"
+
+## Main Menu
+[[menu.main]]
+  name = "blog"
+  weight = 100
+  identifier = "blog"
+  url = "/post/"
+[[menu.main]]
+  name = "projects"
+  identifier = "projects"
+  weight = 200
+  url = "/projects/"
+[[menu.main]]
+  name = "resume"
+  identifier = "resume"
+  weight = 300
+  url = "/resume/"
